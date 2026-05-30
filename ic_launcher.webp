@@ -1,0 +1,92 @@
+package com.example.project;
+
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.PopupMenu;
+
+import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.viewpager2.widget.ViewPager2;
+
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
+
+public class ModeActivity extends AppCompatActivity {
+    private ViewPager2 viewPager;
+    private TabLayout tabLayout;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_mode);
+
+        viewPager = findViewById(R.id.viewPager);
+        tabLayout = findViewById(R.id.tabLayout);
+
+        TabsAdapter adapter = new TabsAdapter(this);
+        viewPager.setAdapter(adapter);
+
+        new TabLayoutMediator(tabLayout, viewPager,
+                (tab, position) -> {
+                    if (position == 0) tab.setText(R.string.first_tab);
+                    else if (position == 1) tab.setText(R.string.second_tab);
+                    else tab.setText(R.string.third_tab);
+                }).attach();
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        // منطق زر الرجوع (Back Button من الأزرار الثلاثة)
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                int currentTab = viewPager.getCurrentItem();
+
+                if (currentTab > 0) {
+                    // لو كنت في التاب 2 أو 3 يرجعك للتاب 1
+                    viewPager.setCurrentItem(0);
+                } else {
+                    // لو كنت في التاب 1 يغلق ModeActivity ويرجع لـ MainActivity
+                    finish();
+                }
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.mode_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_set_mode) {
+            PopupMenu popup = new PopupMenu(this, findViewById(R.id.tabLayout));
+            popup.getMenu().add(R.string.light_mode);
+            popup.getMenu().add(R.string.night_mode);
+            popup.getMenu().add(R.string.system_mode);
+            popup.setOnMenuItemClickListener(menuItem -> {
+                String title = menuItem.getTitle().toString();
+                if (title.equals(getString(R.string.light_mode))) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                } else if (title.equals(getString(R.string.night_mode))) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                } else if (title.equals(getString(R.string.system_mode))) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                }
+                return true;
+            });
+            popup.show();
+            return true;
+        } else if (item.getItemId() == android.R.id.home) {
+            // زر Up Navigation (السهم في الأعلى) يرجع مباشرة لـ MainActivity
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+}
